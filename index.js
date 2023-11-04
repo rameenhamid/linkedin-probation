@@ -1,42 +1,36 @@
+// index.js
 const express = require('express');
-const { sequelize } = require('./utils/database'); // Adjust the path to the database.js file as needed
+const path = require('path');
+const userRoutes = require('./routes/user-routes');
+const { sequelize } = require('./models');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Test the database connection
-sequelize
-  .authenticate()
-  .then(() => {
-    console.log('Connection to the database has been established successfully.');
-  })
-  .catch((error) => {
-    console.error('Unable to connect to the database:', error);
+// Set the view engine to EJS
+app.set('view engine', 'ejs');
+
+// Set the views directory
+app.set('views', 'views');
+
+// Body parsing middleware
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Use user routes
+app.use('/users', userRoutes);
+
+// Define a route for the root URL
+app.get('/', (req, res) => {
+  res.send('Welcome to the homepage!');
+});
+
+sequelize.sync().then(() => {
+  const PORT = 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
   });
-
-// Test the User model
-const User = require('./models/user'); // Adjust the path to the user.js model file as needed
-
-// Create a new user
-async function createUser() {
-  try {
-    const newUser = await User.create({
-      firstName: 'Rameen',
-      lastName: 'Hamid',
-      email: 'rameenhamid@dubizzlelabs.com',
-      password: '123'
-    });
-    console.log('New user created:', newUser);
-  } catch (error) {
-    console.error('Error creating user:', error);
-  }
-}
-
-// Test the User model
-(async () => {
-  await createUser();
-})();
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+}).catch((error) => {
+  console.error('Unable to connect to the database:', error);
 });
