@@ -1,8 +1,9 @@
-// index.js
 const express = require('express');
 const path = require('path');
 const userRoutes = require('./routes/user-routes');
-const { sequelize } = require('./models');
+const { sequelize, User } = require('./models'); // Import the User model
+const authRoutes = require('./routes/authRoutes');
+
 
 const app = express();
 
@@ -21,9 +22,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Use user routes
 app.use('/users', userRoutes);
 
-// Define a route for the root URL
-app.get('/', (req, res) => {
-  res.send('Welcome to the homepage!');
+app.use('/', authRoutes);
+
+app.get('/', async (req, res) => {
+  try {
+    const users = await User.findAll();
+    if (users.length > 0) {
+      res.render('login');
+    } else {
+      res.redirect('/users/create');
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to retrieve users' });
+  }
 });
 
 sequelize.sync().then(() => {

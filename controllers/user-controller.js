@@ -1,5 +1,6 @@
 // controllers/userController.js
 const { User } = require('../models');
+const jwt = require('jsonwebtoken');
 
 const UserController = {
   renderUserForm: (req, res) => {
@@ -68,7 +69,39 @@ const UserController = {
     } catch (error) {
       res.status(500).json({ error: 'Failed to retrieve users' });
     }
-  }
+  },
+
+  signup: async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      const user = await User.findOne({ where: { email, password } });
+      if (user) {
+        res.redirect('/users/create');
+      } else {
+        res.render('signup');
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  },
+  
+  login: async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      const user = await User.findOne({ where: { email, password } });
+      if (user) {
+        res.redirect('/users');
+      } else {
+        res.render('login', { error: 'Invalid email or password' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to login' });
+    }
+  },
+  
+
 };
 
 module.exports = UserController;
