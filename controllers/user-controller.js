@@ -17,7 +17,9 @@ const UserController = {
 
   editUserForm: async (req, res) => {
     try {
-      const user = await User.findByPk(req.params.id);
+      const user = await User.findByPk(req.params.id, {
+        attributes: ['id', 'name', 'number', 'address', 'email', 'password'] // Include email and password attributes
+      });
       res.render('edituser', { user });
     } catch (error) {
       res.status(500).json({ error: 'Failed to retrieve user' });
@@ -26,9 +28,9 @@ const UserController = {
 
   updateUser: async (req, res) => {
     try {
-      const { name, number, address } = req.body;
+      const { name, number, address, email, password } = req.body;
       await User.update(
-        { name, number, address },
+        { name, number, address, email, password },
         { where: { id: req.params.id } }
       );
       res.redirect(`/users/${req.params.id}`);
@@ -48,7 +50,9 @@ const UserController = {
 
   displayUser: async (req, res) => {
     try {
-      const user = await User.findByPk(req.params.id);
+      const user = await User.findByPk(req.params.id, {
+        attributes: ['id', 'name', 'number', 'address', 'email', 'password'] // Include email and password attributes
+      });
       res.render('displayuser', { user });
     } catch (error) {
       res.status(500).json({ error: 'Failed to retrieve user' });
@@ -57,13 +61,14 @@ const UserController = {
 
   displayAllUsers: async (req, res) => {
     try {
-      const users = await User.findAll();
+      const users = await User.findAll({
+        attributes: ['id', 'name', 'number', 'address', 'email', 'password'] // Include email and password attributes
+      });
       res.render('allusers', { users });
     } catch (error) {
       res.status(500).json({ error: 'Failed to retrieve users' });
     }
   }
-
 };
 
 module.exports = UserController;
