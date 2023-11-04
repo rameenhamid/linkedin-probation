@@ -1,42 +1,47 @@
 const express = require('express');
-const { sequelize } = require('./utils/database'); // Adjust the path to the database.js file as needed
+const path = require('path');
+const userRoutes = require('./routes/user-routes');
+const { sequelize, User } = require('./models'); // Import the User model
+const authRoutes = require('./routes/authRoutes');
+
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Test the database connection
-sequelize
-  .authenticate()
-  .then(() => {
-    console.log('Connection to the database has been established successfully.');
-  })
-  .catch((error) => {
-    console.error('Unable to connect to the database:', error);
-  });
+// Set the view engine to EJS
+app.set('view engine', 'ejs');
 
-// Test the User model
-const User = require('./models/user'); // Adjust the path to the user.js model file as needed
+// Set the views directory
+app.set('views', 'views');
 
-// Create a new user
-async function createUser() {
+// Body parsing middleware
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Use user routes
+app.use('/users', userRoutes);
+
+app.use('/', authRoutes);
+
+app.get('/', async (req, res) => {
   try {
-    const newUser = await User.create({
-      firstName: 'Rameen',
-      lastName: 'Hamid',
-      email: 'rameenhamid@dubizzlelabs.com',
-      password: '123'
-    });
-    console.log('New user created:', newUser);
+    const users = await User.findAll();
+    if (users.length > 0) {
+      res.render('login');
+    } else {
+      res.redirect('/users/create');
+    }
   } catch (error) {
-    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Failed to retrieve users' });
   }
-}
+});
 
-// Test the User model
-(async () => {
-  await createUser();
-})();
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+sequelize.sync().then(() => {
+  const PORT = 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}).catch((error) => {
+  console.error('Unable to connect to the database:', error);
 });
